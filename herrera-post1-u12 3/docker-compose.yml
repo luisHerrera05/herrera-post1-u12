@@ -1,0 +1,27 @@
+# Opcional: probar el perfil prod en local con una PostgreSQL real.
+#   docker compose up --build
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppass
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d appdb"]
+      interval: 3s
+      retries: 10
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DATASOURCE_URL: jdbc:postgresql://db:5432/appdb
+      DATASOURCE_USER: appuser
+      DATASOURCE_PASSWORD: apppass
+      JWT_SECRET: una-clave-larga-solo-para-produccion
+      JPA_DDL_AUTO: update
